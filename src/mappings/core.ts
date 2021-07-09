@@ -25,7 +25,7 @@ import {
   createLiquiditySnapshot
 } from './helpers'
 
-import * as factoryHandle from './factory.js';
+import * as factoryHandle from './factory';
 
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
