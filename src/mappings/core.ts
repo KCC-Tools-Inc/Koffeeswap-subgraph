@@ -521,24 +521,31 @@ export function handleSwap(event: Swap): void {
     let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
 
     // calculating price for token0/token1 and token1/token0
+    //TODO: get usd prices for each token
     let price01 = amount0.div(amount1)
     let price10 = amount1.div(amount0)
 
     // try loading entity
     let candle = SwapCandle.load(id)
-    if (candle == null) {
+    if (candle === null) {
       // creating a new entity, values will be same as transaction prices
       candle = new SwapCandle(id)
 
       candle.low01  = price01
       candle.high01 = price01
       candle.open01 = price01
-      candle.open01 = price01
+      candle.close01 = price01
 
       candle.low10  = price10
       candle.high10 = price10
       candle.open10 = price10
-      candle.open10 = price10
+      candle.close10 = price10
+
+      candle.volume0 = amount0
+      candle.volume1 = amount1
+
+      candle.timestamp = timestamp
+      candle.interval = interval
 
     } else {
       // update low, high, close when updating candle entity
@@ -550,6 +557,9 @@ export function handleSwap(event: Swap): void {
 
       candle.close01 = price01
       candle.close01 = price10
+
+      candle.volume0 = candle.volume0.plus(amount0)
+      candle.volume1 = candle.volume1.plus(amount1)
     }
     candle.save()
   }

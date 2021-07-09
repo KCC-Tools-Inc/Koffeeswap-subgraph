@@ -192,6 +192,7 @@ type Burn @entity {
 
 type SwapCandle @entity {
   id: ID! # pair address + "-" + start timestamp + candle_interval
+
   low01: BigDecimal!
   high01: BigDecimal!
   open01: BigDecimal!
@@ -202,6 +203,9 @@ type SwapCandle @entity {
   close10: BigDecimal!
   volume0: BigDecimal!
   volume1: BigDecimal!
+
+  timestamp: BigInt!
+  interval: BigInt!
 }
 
 type Swap @entity {
