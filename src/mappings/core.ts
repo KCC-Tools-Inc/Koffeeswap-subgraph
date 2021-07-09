@@ -507,28 +507,51 @@ export function handleSwap(event: Swap): void {
   swap.amountUSD = trackedAmountUSD === ZERO_BD ? derivedAmountUSD : trackedAmountUSD
   swap.save()
 
+  // looping over each candle interval to track its price
   for (let interval of CANDLE_INTERVALS) {
-    let timestamp = swap.timestamp.div(interval) // get start of interval
+
+    // get start timestamp of interval
+    let timestamp = swap.timestamp.div(interval)
+
+    // id = pair_address-start_interval_bucket-interval_type
     let id = pair.id.concat('-').concat(timestamp.toString()).concat('-').concat(interval.toString())
 
+    // either of amountIn or amountOut will be gt 0 for a token, hence picking max as amount
     let amount0 = BigDecimal.compare(swap.amount0In, swap.amount0Out) == 1 ? swap.amount0In : swap.amount0Out
     let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
+
+    // calculating price for token0/token1 and token1/token0
     let price01 = amount0.div(amount1)
     let price10 = amount1.div(amount0)
 
+    // try loading entity
     let candle = SwapCandle.load(id)
     if (candle == null) {
+      // creating a new entity, values will be same as transaction prices
       candle = new SwapCandle(id)
-      candle.low01 = price01
+
+      candle.low01  = price01
       candle.high01 = price01
       candle.open01 = price01
       candle.open01 = price01
-      candle.low10 = price10
+
+      candle.low10  = price10
       candle.high10 = price10
       candle.open10 = price10
       candle.open10 = price10
-    }
 
+    } else {
+      // update low, high, close when updating candle entity
+      candle.low01  = BigDecimal.compare(candle.low01, price01) == 1 ? price01 : candle.low01
+      candle.high01 = BigDecimal.compare(candle.high01, price01) == 1 ? candle.high01 : price01
+
+      candle.low10  = BigDecimal.compare(candle.low10, price10) == 1 ? price10 : candle.low10
+      candle.high10 = BigDecimal.compare(candle.high10, price10) == 1 ? candle.high10 : price10
+
+      candle.close01 = price01
+      candle.close01 = price10
+    }
+    candle.save()
   }
 
   // update the transaction
