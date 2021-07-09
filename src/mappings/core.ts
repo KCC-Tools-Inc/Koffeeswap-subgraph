@@ -8,7 +8,7 @@ import {
   Mint as MintEvent,
   Burn as BurnEvent,
   Swap as SwapEvent,
-  Bundle
+  Bundle, SwapCandle
 } from '../types/schema'
 import { Pair as PairContract, Mint, Burn, Swap, Transfer, Sync } from '../types/templates/Pair/Pair'
 import { updatePairDayData, updateTokenDayData, updateKoffeeSwapDayData, updatePairHourData } from './dayUpdates'
@@ -17,15 +17,16 @@ import {
   convertTokenToDecimal,
   ADDRESS_ZERO,
   FACTORY_ADDRESS,
+  CANDLE_INTERVALS,
   ONE_BI,
   createUser,
   createLiquidityPosition,
   ZERO_BD,
   BI_18,
-  createLiquiditySnapshot
+  createLiquiditySnapshot, ZERO_BI
 } from './helpers'
 
-import * as factoryHandle from './factory.js';
+import * as factoryHandle from './factory';
 
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
@@ -505,6 +506,30 @@ export function handleSwap(event: Swap): void {
   // use the tracked amount if we have it
   swap.amountUSD = trackedAmountUSD === ZERO_BD ? derivedAmountUSD : trackedAmountUSD
   swap.save()
+
+  for (let interval of CANDLE_INTERVALS) {
+    let timestamp = swap.timestamp.div(interval) // get start of interval
+    let id = pair.id.concat('-').concat(timestamp.toString()).concat('-').concat(interval.toString())
+
+    let amount0 = BigDecimal.compare(swap.amount0In, swap.amount0Out) == 1 ? swap.amount0In : swap.amount0Out
+    let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
+    let price01 = amount0.div(amount1)
+    let price10 = amount1.div(amount0)
+
+    let candle = SwapCandle.load(id)
+    if (candle == null) {
+      candle = new SwapCandle(id)
+      candle.low01 = price01
+      candle.high01 = price01
+      candle.open01 = price01
+      candle.open01 = price01
+      candle.low10 = price10
+      candle.high10 = price10
+      candle.open10 = price10
+      candle.open10 = price10
+    }
+
+  }
 
   // update the transaction
 
