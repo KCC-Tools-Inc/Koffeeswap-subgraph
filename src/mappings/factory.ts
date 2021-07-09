@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { log } from '@graphprotocol/graph-ts'
+import { log, Address } from '@graphprotocol/graph-ts'
 import { KoffeeSwapFactory, Pair, Token, Bundle } from '../types/schema'
 import { PairCreated } from '../types/Factory/Factory'
 import { Pair as PairTemplate } from '../types/templates'
@@ -14,7 +14,7 @@ import {
   fetchTokenTotalSupply
 } from './helpers'
 
-export function handleHackNewPair(token0: Address, token1: Address, pair: Address, event: Swap): void {
+export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Address, event: Swap): void {
   // load factory (create if first exchange)
   let factory = KoffeeSwapFactory.load(FACTORY_ADDRESS)
   if (factory === null) {
@@ -36,16 +36,16 @@ export function handleHackNewPair(token0: Address, token1: Address, pair: Addres
   factory.save()
 
   // create the tokens
-  let token0 = Token.load(token0.toHexString())
-  let token1 = Token.load(token1.toHexString())
+  let token0 = Token.load(_token0.toHexString())
+  let token1 = Token.load(_token1.toHexString())
 
   // fetch info if null
   if (token0 === null) {
-    token0 = new Token(token0.toHexString())
-    token0.symbol = fetchTokenSymbol(token0)
-    token0.name = fetchTokenName(token0)
-    token0.totalSupply = fetchTokenTotalSupply(token0)
-    let decimals = fetchTokenDecimals(token0)
+    token0 = new Token(_token0.toHexString())
+    token0.symbol = fetchTokenSymbol(_token0)
+    token0.name = fetchTokenName(_token0)
+    token0.totalSupply = fetchTokenTotalSupply(_token0)
+    let decimals = fetchTokenDecimals(_token0)
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
       log.debug('mybug the decimal on token 0 was null', [])
@@ -64,11 +64,11 @@ export function handleHackNewPair(token0: Address, token1: Address, pair: Addres
 
   // fetch info if null
   if (token1 === null) {
-    token1 = new Token(token1.toHexString())
-    token1.symbol = fetchTokenSymbol(token1)
-    token1.name = fetchTokenName(token1)
-    token1.totalSupply = fetchTokenTotalSupply(token1)
-    let decimals = fetchTokenDecimals(token1)
+    token1 = new Token(_token1.toHexString())
+    token1.symbol = fetchTokenSymbol(_token1)
+    token1.name = fetchTokenName(_token1)
+    token1.totalSupply = fetchTokenTotalSupply(_token1)
+    let decimals = fetchTokenDecimals(_token1)
 
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
@@ -84,7 +84,7 @@ export function handleHackNewPair(token0: Address, token1: Address, pair: Addres
     token1.txCount = ZERO_BI
   }
 
-  let pair = new Pair(pair.toHexString()) as Pair
+  let pair = new Pair(_pair.toHexString()) as Pair
   pair.token0 = token0.id
   pair.token1 = token1.id
   pair.liquidityProviderCount = ZERO_BI
@@ -108,7 +108,7 @@ export function handleHackNewPair(token0: Address, token1: Address, pair: Addres
   pair.token1Price = ZERO_BD
 
   // create the tracked contract based on the template
-  PairTemplate.create(pair)
+  PairTemplate.create(_pair)
 
   // save updated values
   token0.save()
