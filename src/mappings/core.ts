@@ -31,6 +31,7 @@ function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
 }
 
+
 export function handleTransfer(event: Transfer): void {
   // ignore initial transfers for first adds
   if (event.params.to.toHexString() == ADDRESS_ZERO && event.params.value.equals(BigInt.fromI32(1000))) {
@@ -400,10 +401,9 @@ export function handleBurn(event: Burn): void {
 export function handleSwap(event: Swap): void {
   let pair = Pair.load(event.address.toHexString())
   if (pair === null) {
-
-  let pairContract = PairContract.bind(event.address)
-
-  factoryHandle.handleHackNewPair(pairContract.token0(), pairContract.token1(), event.address, event);
+      let pairContract = PairContract.bind(event.address)
+      factoryHandle.handleHackNewPair(pairContract.token0(), pairContract.token1(), event.address, event);
+      pair = Pair.load(event.address.toHexString())
   }
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
