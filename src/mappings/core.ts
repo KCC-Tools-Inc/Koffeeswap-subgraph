@@ -25,6 +25,8 @@ import {
   createLiquiditySnapshot
 } from './helpers'
 
+import * as factoryHandle from './factory.js';
+
 function isCompleteMint(mintId: string): boolean {
   return MintEvent.load(mintId).sender !== null // sufficient checks
 }
@@ -397,6 +399,12 @@ export function handleBurn(event: Burn): void {
 
 export function handleSwap(event: Swap): void {
   let pair = Pair.load(event.address.toHexString())
+  if (pair === null) {
+
+  let pairContract = PairContract.bind(event.address)
+
+  factoryHandle.handleHackNewPair(pairContract.token0(), pairContract.token1(), event.address, event);
+  }
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
   let amount0In = convertTokenToDecimal(event.params.amount0In, token0.decimals)
