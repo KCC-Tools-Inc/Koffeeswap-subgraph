@@ -32,6 +32,7 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
     bundle.kcsPrice = ZERO_BD
     bundle.save()
   }
+
   factory.pairCount = factory.pairCount + 1
   factory.save()
 
@@ -48,7 +49,7 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
     let decimals = fetchTokenDecimals(_token0)
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
-      log.debug('mybug the decimal on token 0 was null', [])
+      log.warning('invalid contract: the decimal on token0 was null', [])
       return
     }
 
@@ -60,6 +61,7 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
     token0.totalLiquidity = ZERO_BD
     // token0.allPairs = []
     token0.txCount = ZERO_BI
+    token0.save()
   }
 
   // fetch info if null
@@ -72,6 +74,7 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
 
     // bail if we couldn't figure out the decimals
     if (decimals === null) {
+      log.warning('invalid contract: the decimal on token1 was null', [])
       return
     }
     token1.decimals = decimals
@@ -82,9 +85,10 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
     token1.totalLiquidity = ZERO_BD
     // token1.allPairs = []
     token1.txCount = ZERO_BI
+    token1.save()
   }
 
-  let pair = new Pair(_pair.toHexString()) as Pair
+  let pair = new Pair(_pair.toHexString())
   pair.token0 = token0.id
   pair.token1 = token1.id
   pair.liquidityProviderCount = ZERO_BI
@@ -110,11 +114,7 @@ export function handleHackNewPair(_token0: Address, _token1: Address, _pair: Add
   // create the tracked contract based on the template
   PairTemplate.create(_pair)
 
-  // save updated values
-  token0.save()
-  token1.save()
   pair.save()
-  factory.save()
 }
 
 
