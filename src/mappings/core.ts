@@ -546,6 +546,7 @@ export function handleSwap(event: Swap): void {
 
       candle.timestamp = timestamp
       candle.interval = interval
+      candle.pair = pair.id
 
     } else {
       // update low, high, close when updating candle entity

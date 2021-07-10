@@ -206,6 +206,7 @@ type SwapCandle @entity {
 
   timestamp: BigInt!
   interval: BigInt!
+  pair: Pair!
 }
 
 type Swap @entity {
