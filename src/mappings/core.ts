@@ -508,9 +508,10 @@ export function handleSwap(event: Swap): void {
   swap.save()
 
   // looping over each candle interval to track its price
-  for (let interval of CANDLE_INTERVALS) {
+  // for (let interval of CANDLE_INTERVALS) {
+  let interval = CANDLE_INTERVALS
 
-    // get start timestamp of interval
+    // get start timestamp of interval (in secs)
     let timestamp = swap.timestamp.div(interval)
 
     // id = pair_address-start_interval_bucket-interval_type
@@ -544,7 +545,7 @@ export function handleSwap(event: Swap): void {
       candle.volume0 = amount0
       candle.volume1 = amount1
 
-      candle.timestamp = timestamp
+      candle.timestamp = swap.timestamp
       candle.interval = interval
       candle.pair = pair.id
 
@@ -563,7 +564,7 @@ export function handleSwap(event: Swap): void {
       candle.volume1 = candle.volume1.plus(amount1)
     }
     candle.save()
-  }
+  // }
 
   // update the transaction
 
