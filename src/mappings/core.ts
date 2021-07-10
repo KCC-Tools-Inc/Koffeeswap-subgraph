@@ -8,7 +8,7 @@ import {
   Mint as MintEvent,
   Burn as BurnEvent,
   Swap as SwapEvent,
-  Bundle
+  Bundle, SwapCandle
 } from '../types/schema'
 import { Pair as PairContract, Mint, Burn, Swap, Transfer, Sync } from '../types/templates/Pair/Pair'
 import { updatePairDayData, updateTokenDayData, updateKoffeeSwapDayData, updatePairHourData } from './dayUpdates'
@@ -17,12 +17,13 @@ import {
   convertTokenToDecimal,
   ADDRESS_ZERO,
   FACTORY_ADDRESS,
+  CANDLE_INTERVALS,
   ONE_BI,
   createUser,
   createLiquidityPosition,
   ZERO_BD,
   BI_18,
-  createLiquiditySnapshot
+  createLiquiditySnapshot, ZERO_BI
 } from './helpers'
 
 import * as factoryHandle from './factory';
@@ -505,6 +506,65 @@ export function handleSwap(event: Swap): void {
   // use the tracked amount if we have it
   swap.amountUSD = trackedAmountUSD === ZERO_BD ? derivedAmountUSD : trackedAmountUSD
   swap.save()
+
+  // looping over each candle interval to track its price
+  // for (let interval of CANDLE_INTERVALS) {
+  let interval = CANDLE_INTERVALS
+
+    // get start timestamp of interval (in secs)
+    let timestamp = swap.timestamp.div(interval)
+
+    // id = pair_address-start_interval_bucket-interval_type
+    let id = pair.id.concat('-').concat(timestamp.toString()).concat('-').concat(interval.toString())
+
+    // either of amountIn or amountOut will be gt 0 for a token, hence picking max as amount
+    let amount0 = BigDecimal.compare(swap.amount0In, swap.amount0Out) == 1 ? swap.amount0In : swap.amount0Out
+    let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
+
+    // calculating price for token0/token1 and token1/token0
+    //TODO: get usd prices for each token
+    let price01 = amount0.div(amount1)
+    let price10 = amount1.div(amount0)
+
+    // try loading entity
+    let candle = SwapCandle.load(id)
+    if (candle === null) {
+      // creating a new entity, values will be same as transaction prices
+      candle = new SwapCandle(id)
+
+      candle.low01  = price01
+      candle.high01 = price01
+      candle.open01 = price01
+      candle.close01 = price01
+
+      candle.low10  = price10
+      candle.high10 = price10
+      candle.open10 = price10
+      candle.close10 = price10
+
+      candle.volume0 = amount0
+      candle.volume1 = amount1
+
+      candle.timestamp = swap.timestamp
+      candle.interval = interval
+      candle.pair = pair.id
+
+    } else {
+      // update low, high, close when updating candle entity
+      candle.low01  = BigDecimal.compare(candle.low01, price01) == 1 ? price01 : candle.low01
+      candle.high01 = BigDecimal.compare(candle.high01, price01) == 1 ? candle.high01 : price01
+
+      candle.low10  = BigDecimal.compare(candle.low10, price10) == 1 ? price10 : candle.low10
+      candle.high10 = BigDecimal.compare(candle.high10, price10) == 1 ? candle.high10 : price10
+
+      candle.close01 = price01
+      candle.close01 = price10
+
+      candle.volume0 = candle.volume0.plus(amount0)
+      candle.volume1 = candle.volume1.plus(amount1)
+    }
+    candle.save()
+  // }
 
   // update the transaction
 

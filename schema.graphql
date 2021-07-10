@@ -190,6 +190,25 @@ type Burn @entity {
   feeLiquidity: BigDecimal
 }
 
+type SwapCandle @entity {
+  id: ID! # pair address + "-" + start timestamp + candle_interval
+
+  low01: BigDecimal!
+  high01: BigDecimal!
+  open01: BigDecimal!
+  close01: BigDecimal!
+  low10: BigDecimal!
+  high10: BigDecimal!
+  open10: BigDecimal!
+  close10: BigDecimal!
+  volume0: BigDecimal!
+  volume1: BigDecimal!
+
+  timestamp: BigInt!
+  interval: BigInt!
+  pair: Pair!
+}
+
 type Swap @entity {
   # transaction hash + "-" + index in swaps Transaction array
   id: ID!
