@@ -12,9 +12,7 @@ export const FACTORY_ADDRESS = '0xC0fFeE00000e1439651C6aD025ea2A71ED7F3Eab'
 let minute = 60
 let hour = minute * 60
 let day = hour * 24
-export let CANDLE_INTERVALS = [BigInt.fromI32(minute), BigInt.fromI32(minute * 5),
-  BigInt.fromI32(minute * 15),  BigInt.fromI32(minute * 30), BigInt.fromI32(minute * 45),
-  BigInt.fromI32(hour), BigInt.fromI32(hour * 2), BigInt.fromI32(hour * 4), BigInt.fromI32(day)]
+export let CANDLE_INTERVALS = [BigInt.fromI32(minute * 15)]
 
 export let ZERO_BI = BigInt.fromI32(0)
 export let ONE_BI = BigInt.fromI32(1)
