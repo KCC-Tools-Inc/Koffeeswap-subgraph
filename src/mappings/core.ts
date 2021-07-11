@@ -401,6 +401,7 @@ export function handleBurn(event: Burn): void {
 
 export function handleSwap(event: Swap): void {
   let pair = Pair.load(event.address.toHexString())
+  // extra code, can be removed....
   if (pair === null) {
       let pairContract = PairContract.bind(event.address)
       factoryHandle.handleHackNewPair(pairContract.token0(), pairContract.token1(), event.address, event);
