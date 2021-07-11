@@ -559,7 +559,7 @@ export function handleSwap(event: Swap): void {
       candle.high10 = BigDecimal.compare(candle.high10, price10) == 1 ? candle.high10 : price10
 
       candle.close01 = price01
-      candle.close01 = price10
+      candle.close10 = price10
 
       candle.volume0 = candle.volume0.plus(amount0)
       candle.volume1 = candle.volume1.plus(amount1)
