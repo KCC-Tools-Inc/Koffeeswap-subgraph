@@ -401,12 +401,7 @@ export function handleBurn(event: Burn): void {
 
 export function handleSwap(event: Swap): void {
   let pair = Pair.load(event.address.toHexString())
-  // extra code, can be removed....
-  if (pair === null) {
-      let pairContract = PairContract.bind(event.address)
-      factoryHandle.handleHackNewPair(pairContract.token0(), pairContract.token1(), event.address, event);
-      pair = Pair.load(event.address.toHexString())
-  }
+
   let token0 = Token.load(pair.token0)
   let token1 = Token.load(pair.token1)
   let amount0In = convertTokenToDecimal(event.params.amount0In, token0.decimals)
@@ -512,59 +507,59 @@ export function handleSwap(event: Swap): void {
   // for (let interval of CANDLE_INTERVALS) {
   let interval = CANDLE_INTERVALS
 
-    // get start timestamp of interval (in secs)
-    let timestamp = swap.timestamp.div(interval)
+  // get start timestamp of interval (in secs)
+  let timestamp = swap.timestamp.div(interval)
 
-    // id = pair_address-start_interval_bucket-interval_type
-    let id = pair.id.concat('-').concat(timestamp.toString()).concat('-').concat(interval.toString())
+  // id = pair_address-start_interval_bucket-interval_type
+  let id = pair.id.concat('-').concat(timestamp.toString()).concat('-').concat(interval.toString())
 
-    // either of amountIn or amountOut will be gt 0 for a token, hence picking max as amount
-    let amount0 = BigDecimal.compare(swap.amount0In, swap.amount0Out) == 1 ? swap.amount0In : swap.amount0Out
-    let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
+  // either of amountIn or amountOut will be gt 0 for a token, hence picking max as amount
+  let amount0 = BigDecimal.compare(swap.amount0In, swap.amount0Out) == 1 ? swap.amount0In : swap.amount0Out
+  let amount1 = BigDecimal.compare(swap.amount1In, swap.amount1Out) == 1 ? swap.amount1In : swap.amount1Out
 
-    // calculating price for token0/token1 and token1/token0
-    //TODO: get usd prices for each token
-    let price01 = amount0.div(amount1)
-    let price10 = amount1.div(amount0)
+  // calculating price for token0/token1 and token1/token0
+  //TODO: get usd prices for each token
+  let price01 = amount1.equals(ZERO_BD) ? ZERO_BD : amount0.div(amount1)
+  let price10 = amount0.equals(ZERO_BD) ?  ZERO_BD : amount1.div(amount0)
 
-    // try loading entity
-    let candle = SwapCandle.load(id)
-    if (candle === null) {
-      // creating a new entity, values will be same as transaction prices
-      candle = new SwapCandle(id)
+  // try loading entity
+  let candle = SwapCandle.load(id)
+  if (candle === null) {
+    // creating a new entity, values will be same as transaction prices
+    candle = new SwapCandle(id)
 
-      candle.low01  = price01
-      candle.high01 = price01
-      candle.open01 = price01
-      candle.close01 = price01
+    candle.low01  = price01
+    candle.high01 = price01
+    candle.open01 = price01
+    candle.close01 = price01
 
-      candle.low10  = price10
-      candle.high10 = price10
-      candle.open10 = price10
-      candle.close10 = price10
+    candle.low10  = price10
+    candle.high10 = price10
+    candle.open10 = price10
+    candle.close10 = price10
 
-      candle.volume0 = amount0
-      candle.volume1 = amount1
+    candle.volume0 = amount0
+    candle.volume1 = amount1
 
-      candle.timestamp = swap.timestamp
-      candle.interval = interval
-      candle.pair = pair.id
+    candle.timestamp = swap.timestamp
+    candle.interval = interval
+    candle.pair = pair.id
 
-    } else {
-      // update low, high, close when updating candle entity
-      candle.low01  = BigDecimal.compare(candle.low01, price01) == 1 ? price01 : candle.low01
-      candle.high01 = BigDecimal.compare(candle.high01, price01) == 1 ? candle.high01 : price01
+  } else {
+    // update low, high, close when updating candle entity
+    candle.low01  = BigDecimal.compare(candle.low01, price01) == 1 ? price01 : candle.low01
+    candle.high01 = BigDecimal.compare(candle.high01, price01) == 1 ? candle.high01 : price01
 
-      candle.low10  = BigDecimal.compare(candle.low10, price10) == 1 ? price10 : candle.low10
-      candle.high10 = BigDecimal.compare(candle.high10, price10) == 1 ? candle.high10 : price10
+    candle.low10  = BigDecimal.compare(candle.low10, price10) == 1 ? price10 : candle.low10
+    candle.high10 = BigDecimal.compare(candle.high10, price10) == 1 ? candle.high10 : price10
 
-      candle.close01 = price01
-      candle.close10 = price10
+    candle.close01 = price01
+    candle.close10 = price10
 
-      candle.volume0 = candle.volume0.plus(amount0)
-      candle.volume1 = candle.volume1.plus(amount1)
-    }
-    candle.save()
+    candle.volume0 = candle.volume0.plus(amount0)
+    candle.volume1 = candle.volume1.plus(amount1)
+  }
+  candle.save()
   // }
 
   // update the transaction
